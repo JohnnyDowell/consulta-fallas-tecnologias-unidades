@@ -23,13 +23,12 @@ table.blueTable thead {
   border-bottom: 2px solid #444444;
 }
 table.blueTable thead th {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
   color: #FFFFFF;
   border-left: 2px solid #D0E4F5;
   text-align: center !important; /* alineacion centrada para los encabezados */
-  padding-left: 30px !important; /* compensar padding para centrado exacto */
-  padding-right: 30px !important; /* espacio para los iconos de ordenacion */
+  padding: 6px 20px 6px 8px !important; /* reducir padding para ahorrar espacio */
 }
 table.blueTable thead th:first-child {
   border-left: none;

@@ -62,6 +62,42 @@
     var table;
     const mockJsonUrl = "data/reportes.json";
 
+    // Helper para formatear fechas a diseño de doble línea con iconos
+    function formatVisualDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split(' ');
+      if (parts.length < 2) return dateStr;
+      
+      const dateParts = parts[0].split('-');
+      if (dateParts.length < 3) return dateStr;
+      
+      const y = dateParts[0];
+      const m = parseInt(dateParts[1], 10) - 1;
+      const d = parseInt(dateParts[2], 10);
+      
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const formattedDate = `${d} ${months[m]}, ${y}`;
+      
+      const timeParts = parts[1].split(':');
+      if (timeParts.length < 2) return dateStr;
+      
+      let hour = parseInt(timeParts[0], 10);
+      const minute = timeParts[1];
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12;
+      hour = hour ? hour : 12;
+      const formattedTime = `${hour}:${minute} ${ampm}`;
+      
+      return `<div class="text-center d-inline-block" data-raw-date="${dateStr}">
+        <span class="d-block text-dark font-weight-bold" style="font-size: 0.85rem; white-space: nowrap;">
+          ${formattedDate}
+        </span>
+        <span class="d-block text-muted" style="font-size: 0.75rem; margin-top: 2px; white-space: nowrap;">
+          ${formattedTime}
+        </span>
+      </div>`;
+    }
+
     // Inicializar el filtro de mes con el mes actual
     const date = new Date();
     const year = date.toLocaleString('default', { year: 'numeric' });
@@ -89,23 +125,37 @@
               var button = node.querySelector('button');
               return button ? button.textContent.trim() : data;
             }
-            // Si la columna es Resolución (índice 6), exportar el valor del textarea si existe
+            // Si la columna es Detalle (índice 4), retornar el texto limpio del div
+            if (column === 4) {
+              var div = node.querySelector('div');
+              return div ? div.textContent.trim() : data;
+            }
+            // Si la columna es Fecha Creación (5) o Fecha Cerrado (8) con formato de doble línea
+            if (column === 5 || column === 8) {
+              var container = node.querySelector('[data-raw-date]');
+              return container ? container.getAttribute('data-raw-date') : data;
+            }
+            // Si la columna es Resolución (índice 6), exportar el valor del textarea si existe, o el texto del div
             if (column === 6) {
               var textarea = node.querySelector('textarea');
-              return textarea ? textarea.value : data;
+              if (textarea) return textarea.value;
+              var div = node.querySelector('div');
+              return div ? div.textContent.trim() : data;
             }
             // Si la columna es Tipo de Falla (índice 7), exportar el valor del select si existe
             if (column === 7) {
               var select = node.querySelector('select');
               return select ? select.value : data;
             }
-            // Si la columna es Fecha Cerrado (índice 8) y contiene el botón, exportar vacío
+            // Si la columna es Fecha Cerrado (índice 8) y contiene el botón de guardar
             if (column === 8) {
               var button = node.querySelector('button');
-              return button ? '' : data;
+              if (button && button.textContent.includes('Guardar')) {
+                return '';
+              }
             }
-            // Si la columna es Estado (índice 9), exportar el texto limpio sin etiquetas HTML
-            if (column === 9) {
+            // Si la columna es Estado (índice 10), exportar el texto limpio sin etiquetas HTML
+            if (column === 10) {
               var badge = node.querySelector('.badge');
               return badge ? badge.textContent.trim() : data;
             }
@@ -171,13 +221,14 @@
           }, 100);
         },
         columns: [
-          { "data" : "Nomina", "title" : "Nómina", "className": "dt-head-center dt-body-center" },
-          { "data" : "Nombre", "title" : "Creador", "className": "dt-head-center dt-body-center" },
-          { "data" : "Unidad", "title" : "Unidad", "className": "dt-head-center dt-body-center" },
+          { "data" : "Nomina", "title" : "Nómina", "className": "dt-head-center dt-body-center", "width": "70px" },
+          { "data" : "Nombre", "title" : "Creador", "className": "dt-head-center dt-body-center", "width": "100px" },
+          { "data" : "Unidad", "title" : "Unidad", "className": "dt-head-center dt-body-center", "width": "50px" },
           { 
             "data" : "Problema", 
             "title" : "Problema",
             "className": "dt-head-center dt-body-center",
+            "width": "80px",
             "render": function(data, type, row) {
               const probMap = {
                 'Falla en Camara': { text: 'Falla en Cámara', css: 'badge-camara' },
@@ -195,15 +246,41 @@
               return data;
             }
           },
-          { "data" : "Detalle", "title" : "Detalle", "className": "dt-head-center dt-body-center" },
-          { "data" : "fechaCreacion", "title" : "Fecha Creación", "className": "dt-head-center dt-body-center" },
+          { 
+            "data" : "Detalle", 
+            "title" : "Detalle", 
+            "className": "dt-head-center dt-body-center", 
+            "width": "330px",
+            "render": function(data, type, row) {
+              if (type === 'display') {
+                return `<div style="width: 320px; min-width: 260px; text-align: left; white-space: normal; word-break: break-word;">${data}</div>`;
+              }
+              return data;
+            }
+          },
+          { 
+            "data" : "fechaCreacion", 
+            "title" : "Fecha Creación", 
+            "className": "dt-head-center dt-body-center",
+            "width": "90px",
+            "render": function(data, type, row) {
+              if (type === 'display') {
+                return formatVisualDate(data);
+              }
+              return data;
+            }
+          },
           { 
             "data" : "Resolucion", 
             "title" : "Resolución", 
             "className": "dt-head-center dt-body-center",
+            "width": "310px",
             "render": function(data, type, row) {
               if (row.Estado === 'Por Atender' && type === 'display') {
-                return `<textarea id="Resolucion_${row.Id}" class="form-control" placeholder="Escriba la resolución..." rows="2" style="width: 250px; min-width: 200px; font-size: 13px;"></textarea>`;
+                return `<textarea id="Resolucion_${row.Id}" class="form-control" placeholder="Escriba la resolución..." rows="2" style="width: 280px; min-width: 240px; font-size: 12px; padding: 4px;"></textarea>`;
+              }
+              if (type === 'display') {
+                return `<div style="width: 300px; min-width: 240px; text-align: left; white-space: normal; word-break: break-word;">${data || ''}</div>`;
               }
               return data || '';
             }
@@ -212,9 +289,10 @@
             "data" : "TipoFalla", 
             "title" : "Tipo de Falla", 
             "className": "dt-head-center dt-body-center",
+            "width": "90px",
             "render": function(data, type, row) {
               if (row.Estado === 'Por Atender' && type === 'display') {
-                return `<select id="TipoFalla_${row.Id}" class="form-select" style="width: 130px; min-width: 110px; font-size: 13px;">
+                return `<select id="TipoFalla_${row.Id}" class="form-select" style="width: 100px; min-width: 90px; font-size: 12px; padding: 2px 4px; height: auto;">
                           <option value="">Seleccione...</option>
                           <option value="Falla">Falla</option>
                           <option value="Daño">Daño</option>
@@ -227,17 +305,31 @@
             "data" : "FechaCerrado", 
             "title" : "Fecha Cerrado", 
             "className": "dt-head-center dt-body-center",
+            "width": "90px",
             "render": function(data, type, row) {
               if (row.Estado === 'Por Atender' && type === 'display') {
                 return `<button class="btn btn-success btn-badge" onclick="GuardarSeguimiento(${row.Id})"><i class="fa-regular fa-floppy-disk"></i> Guardar</button>`;
               }
+              if (type === 'display') {
+                return formatVisualDate(data);
+              }
               return data || '';
+            }
+          },
+          { 
+            "data" : "Tecnico", 
+            "title" : "Nombre del Técnico", 
+            "className": "dt-head-center dt-body-center",
+            "width": "110px",
+            "render": function(data, type, row) {
+              return data ? data : '-';
             }
           },
           { 
             "data" : "Estado", 
             "title" : "Estado", 
             "className": "dt-head-center dt-body-center",
+            "width": "80px",
             "render": function(data, type, row) {
               if (type === 'display') {
                 if (data === 'Atendido') {

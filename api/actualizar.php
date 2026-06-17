@@ -46,6 +46,7 @@ foreach ($dataArray['data'] as &$reporte) {
         $reporte['Resolucion'] = $resolucion;
         $reporte['TipoFalla'] = $tipoFalla;
         $reporte['FechaCerrado'] = date('Y-m-d H:i:s');
+        $reporte['Tecnico'] = 'Administrador (Demo)';
         $reporte['Estado'] = 'Atendido';
         $found = true;
         break;
