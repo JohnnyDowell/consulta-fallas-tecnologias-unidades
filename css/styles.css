@@ -1,0 +1,133 @@
+header,
+footer {
+    background: rgb(64, 58, 138);
+    background: linear-gradient(
+        31deg,
+        rgba(64, 58, 138, 1) 0%,
+        rgba(68, 68, 170, 1) 38%,
+        rgba(160, 206, 215, 1) 100%
+    );
+}
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #7491db;
+    background-image: url("images/45-degree-fabric-light.png");
+}
+body .container-fluid {
+    flex: 1 1 auto;
+}
+.container-fluid .card {
+    border-radius: 15px;
+    background: #d6e6ee;
+    background: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.container-fluid.main select {
+    background: white;
+}
+.container-fluid.main input {
+    background: #d3f9d3;
+}
+.container.main a.no-underline {
+    text-decoration: none !important;
+}
+.no-wrap {
+    white-space: nowrap;
+}
+.search-date {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+}
+/* Data Table Buttons */
+.dt-buttons button.dt-button {
+    padding: 8px;
+    background: white;
+}
+.dt-buttons button.dt-button i {
+    font-size: 20px;
+}
+.dt-buttons button.dt-button:hover {
+    background: linear-gradient(to bottom, #d1e2f7 0%, #abd1ff 100%) !important;
+}
+.black {
+    color: black;
+}
+.blue {
+    color: blue;
+}
+.green {
+    color: green;
+}
+.gray {
+    color: gray;
+}
+.red {
+    color: red;
+}
+/* datatable images */
+td a img {
+    display: block;
+}
+tbody td:last-child {
+    white-space: nowrap;
+}
+
+/* Rows */
+.save-icon {
+    bottom: 0;
+    right: 0;
+}
+
+/* Estilos de botones tipo badge para mantener la estetica */
+.btn-badge {
+    border-radius: 20px !important;
+    padding: 4px 14px !important;
+    font-size: 0.85rem !important;
+    font-weight: bold !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Efecto hover dinamico para los botones de la tabla */
+.btn-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Colores pastel específicos para problemas de tecnología */
+.badge-camara {
+    background-color: #a0c4ff !important; /* Azul pastel */
+    border-color: #a0c4ff !important;
+    color: #1e293b !important;
+    pointer-events: none;
+}
+
+.badge-memoria {
+    background-color: #cdb4db !important; /* Morado pastel */
+    border-color: #cdb4db !important;
+    color: #1e293b !important;
+    pointer-events: none;
+}
+
+.badge-gps {
+    background-color: #c1f0c1 !important; /* Verde pastel */
+    border-color: #c1f0c1 !important;
+    color: #1e293b !important;
+    pointer-events: none;
+}
+
+.badge-dmas {
+    background-color: #ffd6a5 !important; /* Naranja/Amarillo pastel */
+    border-color: #ffd6a5 !important;
+    color: #1e293b !important;
+    pointer-events: none;
+}
+
