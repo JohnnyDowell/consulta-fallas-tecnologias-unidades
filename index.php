@@ -11,522 +11,392 @@ $nombreUsuario = $_SESSION["usuario"];
 $permisoUsuario = $_SESSION["permiso"];
 ?>
 <!DOCTYPE html>
-<html lang="es" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SES - Consulta de Fallas de Tecnologías en Unidades</title>
     <link rel="icon" type="image/x-icon" href="./images/favicon.png">
-    <!-- Jquery -->
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <!-- bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-    <!-- Data Table -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
-    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-    <!-- Data Table Buttons -->
-    <script src="libraries/dataTables/Buttons/dataTables.buttons.min.js"></script>
-    <script src="libraries/dataTables/Buttons/jszip.min.js"></script>
-    <script src="libraries/dataTables/Buttons/pdfmake.min.js"></script>
-    <script src="libraries/dataTables/Buttons/vfs_fonts.js"></script>
-    <script src="libraries/dataTables/Buttons/buttons.html5.min.js"></script>
-    <script src="libraries/dataTables/Buttons/buttons.print.min.js"></script>
-    <link href="libraries/dataTables/Buttons/buttons.dataTables.min.css" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Sweet Alert 2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Font Awesome (button icons) -->
+    
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Custom Style -->
-    <link href="css/tableStyle/style.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="css/styles.css?v=<?php echo file_exists('css/styles.css') ? filemtime('css/styles.css') : '1'; ?>">
-  </head>
-  <body>
-    <header class="py-2">
-      <div class="container position-relative">
-        <h1 class="text-white">SES - Fallas de Tecnologías en Unidades</h1>
-        <input name="fecha" value="" id="fecha" class="position-absolute t-0 r-0 form-control search-date" type="month" onchange="loadData(this.value)">
-        <div class="d-flex justify-content-start">
-          <div class="align-items-center d-flex justify-content-center">
-            <span class="bold text-info">Usuario:</span>
-            &nbsp;
-            <span class="text-white">
-              <?php echo htmlspecialchars($nombreUsuario); ?>
-            </span>
-            &nbsp;
-            &nbsp;
-            <a href="login/" class="text-warning ms-3">
-              Cerrar sesión
-            </a>
-          </div>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Outfit', 'Segoe UI', sans-serif;
+        }
+        table tbody td {
+            vertical-align: middle !important;
+        }
+        footer {
+            border: none !important;
+            border-top: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        
+        /* Ocultar elementos innecesarios al imprimir en PDF */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+                font-size: 10px !important;
+            }
+            header, footer, .kpi-section, .filter-section, .no-print, button, .modal-backdrop {
+                display: none !important;
+            }
+            main {
+                padding: 0 !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #94a3b8 !important;
+                padding: 6px 4px !important;
+                font-size: 9px !important;
+                color: black !important;
+                white-space: normal !important;
+            }
+            .badge {
+                border: none !important;
+                background: transparent !important;
+                color: black !important;
+                padding: 0 !important;
+                font-weight: bold !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Header Banner FOG Style -->
+    <header class="relative bg-white border-b border-slate-200 select-none z-40 shadow-sm shrink-0 no-print">
+        <div class="max-w-[1600px] w-[98%] mx-auto flex flex-col sm:flex-row items-center justify-between px-[clamp(10px,1.2vw,16px)] py-2 gap-3 sm:gap-0">
+            <!-- Left Brand Logo -->
+            <div class="flex items-center gap-4">
+                <div class="bg-[#1f4e78] text-[#ffc000] font-black text-2xl px-4 py-1.5 rounded shadow-sm border border-[#163754]">
+                    FTU
+                </div>
+                <div class="flex flex-col items-start leading-none">
+                    <h1 class="text-base font-bold text-[#1f4e78] tracking-tight mb-1">FALLAS DE TECNOLOGÍAS EN UNIDADES</h1>
+                    <span class="text-xs text-slate-500 font-medium">Control de Seguimiento y Cierre Operativo</span>
+                </div>
+            </div>
+            
+            <!-- Right Profile Info & Logout -->
+            <div class="flex items-center gap-4 text-xs">
+                <!-- User Profile Card -->
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-[#1f4e78] border border-slate-200 uppercase shrink-0">
+                        <?php echo substr($nombreUsuario, 0, 1); ?>
+                    </div>
+                    <div class="flex flex-col items-start leading-tight">
+                        <span class="font-bold text-slate-700"><?php echo htmlspecialchars($nombreUsuario); ?></span>
+                        <span class="text-[9px] text-[#1f4e78] font-bold uppercase tracking-wider">Nómina: <?php echo htmlspecialchars($nominaUsuario); ?></span>
+                    </div>
+                </div>
+                
+                <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+                
+                <!-- Logout Button -->
+                <a href="login/" title="Cerrar sesión" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-red-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition-colors font-semibold">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Salir</span>
+                </a>
+            </div>
         </div>
-      </div>
+        <!-- Yellow Bottom Accent Line -->
+        <div class="h-[4px] bg-[#ffc000] w-full"></div>
     </header>
-    <div class="container-fluid main py-3">
-      <div class="card p-3">
-        <div class="table-responsive">
-          <table id="reportsTable" class="blueTable" style="width: 100%;">
-          </table>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-[1600px] w-[98%] mx-auto p-[clamp(10px,1.2vw,16px)] pb-0 flex flex-col gap-6">
+        
+
+
+        <!-- Main Dashboard Card -->
+        <section class="card bg-white rounded-2xl shadow-md border border-slate-200 border-t-4 border-t-[#1f4e78] p-[clamp(10px,1.2vw,14px)] flex flex-col flex-1 gap-2">
+            
+            <!-- Filter Bar & Actions (No Print) -->
+            <div class="filter-section flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-2 pb-2 border-b border-slate-100 no-print">
+                <!-- Left: Status Tabs -->
+                <div class="flex border-b border-slate-200 p-0.5 bg-slate-100/80 rounded-xl max-w-md w-full">
+                    <button onclick="filterStatus('all')" id="tab-all" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-[#1f4e78] bg-[#ffc000] shadow-sm transition-all flex items-center justify-center gap-1.5">
+                        Todos
+                        <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px]" id="count-all">0</span>
+                    </button>
+                    <button onclick="filterStatus('pending')" id="tab-pending" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-800 transition-all flex items-center justify-center gap-1.5">
+                        Por Atender
+                        <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px]" id="count-pending">0</span>
+                    </button>
+                    <button onclick="filterStatus('resolved')" id="tab-resolved" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-800 transition-all flex items-center justify-center gap-1.5">
+                        Atendidos
+                        <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px]" id="count-resolved">0</span>
+                    </button>
+                </div>
+                
+                <!-- Right: Search, Date & Export buttons -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Date Picker -->
+                    <div class="relative inline-block text-left" id="custom-month-picker">
+                        <!-- Trigger Button -->
+                        <button onclick="toggleMonthPicker()" id="month-picker-btn" class="px-3 py-2 bg-slate-50 border border-slate-300 hover:bg-slate-100 rounded-xl text-xs font-bold text-[#1f4e78] flex items-center gap-2 shadow-sm transition-colors focus:outline-none">
+                            <i class="fa-regular fa-calendar-days text-slate-400"></i>
+                            <span id="selected-month-label">Cargando...</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        
+                        <!-- Dropdown Panel -->
+                        <div id="month-picker-dropdown" class="hidden absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 animate-fade-in">
+                            <!-- Year Header Control -->
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100 select-none">
+                                <button onclick="changePickerYear(-1)" class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">
+                                    <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                                </button>
+                                <span id="picker-year-label" class="font-bold text-slate-800 text-sm">2026</span>
+                                <button onclick="changePickerYear(1)" class="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">
+                                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Months Grid -->
+                            <div class="grid grid-cols-3 gap-1.5 pt-3 select-none">
+                                <button onclick="selectPickerMonth(0)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Ene</button>
+                                <button onclick="selectPickerMonth(1)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Feb</button>
+                                <button onclick="selectPickerMonth(2)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Mar</button>
+                                <button onclick="selectPickerMonth(3)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Abr</button>
+                                <button onclick="selectPickerMonth(4)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">May</button>
+                                <button onclick="selectPickerMonth(5)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Jun</button>
+                                <button onclick="selectPickerMonth(6)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Jul</button>
+                                <button onclick="selectPickerMonth(7)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Ago</button>
+                                <button onclick="selectPickerMonth(8)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Sep</button>
+                                <button onclick="selectPickerMonth(9)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Oct</button>
+                                <button onclick="selectPickerMonth(10)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Nov</button>
+                                <button onclick="selectPickerMonth(11)" class="month-btn py-1.5 text-xs font-bold rounded-lg hover:bg-slate-50 text-slate-700 transition-all">Dic</button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="fecha">
+                    </div>
+                    
+                    <!-- Search Input -->
+                    <div class="relative flex-1 min-w-[200px] sm:flex-none">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="search" oninput="handleSearch(this.value)" placeholder="Buscar reportes..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1f4e78] focus:border-[#1f4e78] transition-colors">
+                    </div>
+                    
+                    <!-- Export Dropdown -->
+                    <div class="relative">
+                        <button onclick="toggleExportMenu()" id="btn-export" class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-colors focus:outline-none shadow-sm">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Exportar</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="export-menu" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-50 animate-fade-in">
+                            <button onclick="exportToExcel()" class="w-full px-4 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 flex items-center gap-2 transition-colors">
+                                <i class="fa-solid fa-file-excel text-emerald-500 text-sm"></i> Descargar Excel
+                            </button>
+                            <button onclick="exportToCSV()" class="w-full px-4 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                                <i class="fa-solid fa-file-csv text-slate-500 text-sm"></i> Descargar CSV
+                            </button>
+                            <button onclick="window.print()" class="w-full px-4 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-red-600 flex items-center gap-2 transition-colors">
+                                <i class="fa-solid fa-file-pdf text-red-500 text-sm"></i> Descargar PDF / Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto flex-1 border border-slate-100 rounded-xl">
+                <table id="reports-table" class="min-w-full text-[13px] text-slate-700 font-medium">
+                    <thead class="bg-slate-50 border-b border-slate-200 select-none text-[#1f4e78] font-bold text-xs">
+                        <tr>
+                            <th onclick="sortBy('NominaCreador')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Nómina <span id="sort-NominaCreador"></span>
+                            </th>
+                            <th onclick="sortBy('Nombre')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Creador <span id="sort-Nombre"></span>
+                            </th>
+                            <th onclick="sortBy('Unidad')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Unidad <span id="sort-Unidad"></span>
+                            </th>
+                            <th onclick="sortBy('Departamento')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Departamento <span id="sort-Departamento"></span>
+                            </th>
+                            <th onclick="sortBy('Planta')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Planta <span id="sort-Planta"></span>
+                            </th>
+                            <th onclick="sortBy('ProblemaDescripcion')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Problema <span id="sort-ProblemaDescripcion"></span>
+                            </th>
+                            <th class="px-2 py-1.5 text-left whitespace-nowrap">Detalle</th>
+                            <th onclick="sortBy('FechaCreacion')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Fecha Creación <span id="sort-FechaCreacion"></span>
+                            </th>
+                            <th class="px-2 py-1.5 text-left whitespace-nowrap">Resolución</th>
+                            <th onclick="sortBy('TipoResolucionDescripcion')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Tipo de Falla <span id="sort-TipoResolucionDescripcion"></span>
+                            </th>
+                            <th onclick="sortBy('FechaCerrado')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Fecha Cerrado <span id="sort-FechaCerrado"></span>
+                            </th>
+                            <th onclick="sortBy('ResolucionNombre')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Técnico <span id="sort-ResolucionNombre"></span>
+                            </th>
+                            <th onclick="sortBy('Estado')" class="px-2 py-1.5 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap">
+                                Estado <span id="sort-Estado"></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100">
+                        <!-- Loaded Dynamically by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Table Footer / Pagination (No Print) -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-1.5 text-xs font-semibold text-slate-500 select-none no-print">
+                <span id="pagination-info">Mostrando 0 a 0 de 0 registros</span>
+                <div class="flex items-center gap-1.5" id="pagination-buttons">
+                    <!-- Loaded Dynamically by JS -->
+                </div>
+            </div>
+            
+        </section>
+        
+    </main>
+
+    <!-- Modal Form for resolution capture -->
+    <div id="modal-resolucion" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 no-print transition-all">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col animate-fade-in">
+            <!-- Header: FOG Blue Gradient with Yellow Accent Line -->
+            <div class="px-6 py-4 bg-gradient-to-r from-[#1f4e78] to-[#163754] flex items-center justify-between text-white relative">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-[#ffc000] text-[#1f4e78] flex items-center justify-center font-bold shadow-sm">
+                        <i class="fa-solid fa-wrench text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h3 class="font-bold text-xs uppercase tracking-wider">Cierre de Seguimiento</h3>
+                        <span class="text-[9px] text-[#ffc000] font-bold uppercase tracking-widest mt-0.5">Captura Técnica</span>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-white/80 hover:text-white text-2xl font-bold focus:outline-none transition-colors">&times;</button>
+            </div>
+            <!-- Yellow Line Divider -->
+            <div class="h-[4px] bg-[#ffc000] w-full"></div>
+
+            <!-- Body Content -->
+            <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto bg-slate-50/50">
+                <!-- Metadata Info Grid -->
+                <div class="grid grid-cols-2 gap-4 bg-white p-4 rounded-xl text-xs font-semibold text-slate-600 border border-slate-200/60 shadow-sm relative overflow-hidden">
+                    <div class="absolute left-0 top-0 bottom-0 w-[4px] bg-[#1f4e78]"></div>
+                    <div>
+                        <span class="text-[9px] text-slate-400 block uppercase tracking-wider font-bold mb-0.5">
+                            <i class="fa-solid fa-user mr-1 text-slate-400"></i> Creador del reporte
+                        </span>
+                        <span class="text-slate-800 font-bold" id="modal-creador">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] text-slate-400 block uppercase tracking-wider font-bold mb-0.5">
+                            <i class="fa-solid fa-id-card mr-1 text-slate-400"></i> Nómina
+                        </span>
+                        <span class="text-slate-800 font-bold" id="modal-nomina">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] text-slate-400 block uppercase tracking-wider font-bold mb-0.5">
+                            <i class="fa-solid fa-bus mr-1 text-slate-400"></i> Unidad / Depto / Planta
+                        </span>
+                        <span class="text-slate-800 font-bold" id="modal-unidad-depto">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] text-slate-400 block uppercase tracking-wider font-bold mb-0.5">
+                            <i class="fa-solid fa-triangle-exclamation mr-1 text-slate-400"></i> Problema
+                        </span>
+                        <span class="text-slate-800 font-bold" id="modal-problema">-</span>
+                    </div>
+                    <div class="col-span-2 pt-2 border-t border-slate-100">
+                        <span class="text-[9px] text-slate-400 block uppercase tracking-wider font-bold mb-0.5">
+                            <i class="fa-solid fa-file-text mr-1 text-slate-400"></i> Detalle observado
+                        </span>
+                        <p class="text-slate-700 font-medium leading-relaxed mt-0.5 bg-slate-50 p-2.5 rounded-lg border border-slate-100/80 whitespace-pre-wrap text-[11px]" id="modal-detalle">-</p>
+                    </div>
+                </div>
+                
+                <!-- Inputs Form -->
+                <div class="space-y-4">
+                    <input type="hidden" id="modal-report-id">
+                    
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-tags text-[#1f4e78]"></i>
+                            <span>Clasificación de Falla / Daño *</span>
+                        </label>
+                        <select id="modal-tipo-resolucion" class="w-full border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-[#1f4e78] focus:border-[#1f4e78] focus:outline-none text-xs font-semibold bg-white shadow-sm transition-all">
+                            <!-- Loaded Dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-comment-dots text-[#1f4e78]"></i>
+                            <span>Resolución / Solución técnica *</span>
+                        </label>
+                        <textarea id="modal-resolucion-texto" class="w-full border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-[#1f4e78] focus:border-[#1f4e78] focus:outline-none text-xs font-medium bg-white shadow-sm transition-all resize-y" rows="4" placeholder="Escriba detalladamente cómo se solucionó la falla técnica..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Info Hint -->
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-[11px] text-amber-800 font-medium shadow-sm">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 text-sm shrink-0"></i>
+                    <span>Al hacer clic en <strong>Guardar y Cerrar</strong>, se registrará su nómina como técnico resolutor y el estado del reporte cambiará permanentemente a <strong>Atendido</strong>.</span>
+                </div>
+            </div>
+            
+            <!-- Footer Actions -->
+            <div class="px-6 py-4 border-t border-slate-100 bg-white flex justify-end gap-2 text-xs shrink-0 font-bold shadow-inner">
+                <button onclick="closeModal()" class="px-4 py-2 border border-slate-300 rounded-xl hover:bg-slate-50 text-slate-600 transition-colors">Cancelar</button>
+                <button onclick="saveFollowUp()" class="px-4 py-2 bg-[#1f4e78] hover:bg-[#163754] text-white rounded-xl transition-all shadow hover:shadow-md active:scale-[0.98] flex items-center gap-1.5">
+                    <i class="fa-regular fa-floppy-disk"></i>
+                    <span>Guardar y Cerrar</span>
+                </button>
+            </div>
         </div>
-      </div>
     </div>
-    <footer class="p-4">
-      <div class="container">
-        <span class="text-white">
-            Settepi Tijuana - Administración y Nuevos Proyectos - 2026
-        </span>
-      </div>
+
+    <!-- Footer (No Print) -->
+    <footer class="py-2 mt-auto no-print text-center select-none shrink-0 bg-transparent">
+        <div class="max-w-[1600px] w-[98%] mx-auto px-[clamp(10px,1.2vw,16px)] flex justify-center items-center">
+            <span class="text-[11px] text-slate-400 font-semibold tracking-wider uppercase">
+                Settepi Tijuana - Administración y Nuevos Proyectos - 2026
+            </span>
+        </div>
     </footer>
-  </body>
-  <script type="text/javascript">
-    var table;
-    const host = "https://ses.lidcorp.mx";
-    const apiBaseUrl = host + "/Master-API/ses/FTU/ConsultarPorMes";
-    const nominaUsuario = "<?php echo $nominaUsuario; ?>";
-    const tienePermiso = <?php echo $permisoUsuario ? 'true' : 'false'; ?>;
-    var tiposResolucion = [];
 
-    // Helper para formatear fechas a diseño de doble línea con iconos
-    function formatVisualDate(dateStr) {
-      if (!dateStr) return '';
-      const parts = dateStr.split(' ');
-      if (parts.length < 2) return dateStr;
-      
-      const dateParts = parts[0].split('-');
-      if (dateParts.length < 3) return dateStr;
-      
-      const y = dateParts[0];
-      const m = parseInt(dateParts[1], 10) - 1;
-      const d = parseInt(dateParts[2], 10);
-      
-      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      const formattedDate = `${d} ${months[m]}, ${y}`;
-      
-      const timeParts = parts[1].split(':');
-      if (timeParts.length < 2) return dateStr;
-      
-      let hour = parseInt(timeParts[0], 10);
-      const minute = timeParts[1];
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      hour = hour % 12;
-      hour = hour ? hour : 12;
-      const formattedTime = `${hour}:${minute} ${ampm}`;
-      
-      return `<div class="text-center d-inline-block" data-raw-date="${dateStr}">
-        <span class="d-block text-dark font-weight-bold" style="font-size: 0.85rem; white-space: nowrap;">
-          ${formattedDate}
-        </span>
-        <span class="d-block text-muted" style="font-size: 0.75rem; margin-top: 2px; white-space: nowrap;">
-          ${formattedTime}
-        </span>
-      </div>`;
-    }
-
-    // Inicializar el filtro de mes con el mes actual
-    const date = new Date();
-    const year = date.toLocaleString('default', { year: 'numeric' });
-    const month = date.toLocaleString('default', { month: '2-digit' });
-    document.getElementById("fecha").value = year + "-" + month;
-
-    function loadData(value){
-      document.title = "SES - Consulta de Fallas - " + $("#fecha")[0].value;
-
-      if(table){
-        table.ajax.reload();
-      }
-      else{
-        createTable(apiBaseUrl);
-      }
-    }
-
-    function createTable(url){
-      // Configuración de exportación para botones de DataTables
-      const exportFormat = {
-        format: {
-          body: function (data, row, column, node) {
-            // Si la columna es Problema (índice 5), retornar el texto limpio del botón
-            if (column === 5) {
-              var button = node.querySelector('button');
-              return button ? button.textContent.trim() : data;
-            }
-            // Si la columna es Detalle (índice 6), retornar el texto limpio del div
-            if (column === 6) {
-              var div = node.querySelector('div');
-              return div ? div.textContent.trim() : data;
-            }
-            // Si la columna es Fecha Cerrado (índice 10) y contiene el botón de guardar
-            if (column === 10) {
-              var button = node.querySelector('button');
-              if (button && button.textContent.includes('Guardar')) {
-                return '';
-              }
-            }
-            // Si la columna es Fecha Creación (7) o Fecha Cerrado (10) con formato de doble línea
-            if (column === 7 || column === 10) {
-              var container = node.querySelector('[data-raw-date]');
-              return container ? container.getAttribute('data-raw-date') : data;
-            }
-            // Si la columna es Resolución (índice 8), exportar el valor del textarea si existe, o el texto del div
-            if (column === 8) {
-              var textarea = node.querySelector('textarea');
-              if (textarea) return textarea.value;
-              var div = node.querySelector('div');
-              return div ? div.textContent.trim() : data;
-            }
-            // Si la columna es Tipo de Falla (índice 9), exportar el valor del select si existe
-            if (column === 9) {
-              var select = node.querySelector('select');
-              return select ? select.value : data;
-            }
-            // Si la columna es Estado (índice 12), exportar el texto limpio sin etiquetas HTML
-            if (column === 12) {
-              var badge = node.querySelector('.badge');
-              return badge ? badge.textContent.trim() : data;
-            }
-            return data;
-          }
-        }
-      };
-
-      table = $('#reportsTable').DataTable({
-        scrollX: false,
-        responsive: false,
-        autoWidth: false,
-        dom: 'Blfrtip',
-        buttons: [
-          {
-              extend:    'copyHtml5',
-              text:      '<i class="fa-solid fa-copy gray"></i> Copiar',
-              titleAttr: 'Copiar',
-              exportOptions: exportFormat
-          },
-          {
-              extend:    'excelHtml5',
-              text:      '<i class="fa-solid fa-file-excel green"></i> Excel',
-              titleAttr: 'Excel',
-              exportOptions: exportFormat
-          },
-          {
-              extend:    'csvHtml5',
-              text:      '<i class="fa-solid fa-file-text black"></i> CSV',
-              titleAttr: 'CSV',
-              exportOptions: exportFormat
-          },
-          {
-              extend:    'pdfHtml5',
-              text:      '<i class="fa-solid fa-file-pdf red"></i> PDF',
-              titleAttr: 'PDF',
-              exportOptions: exportFormat
-          },
-          {
-              extend:    'print',
-              text:      '<i class="fa-solid fa-print blue"></i> Imprimir',
-              titleAttr: 'Imprimir',
-              exportOptions: exportFormat
-          }
-        ],
-        language: {'url': 'https://cdn.datatables.net/plug-ins/a5734b29083/i18n/Spanish.json' },
-        ajax: {
-          url: url,
-          type: 'GET',
-          data: function ( d ) {
-            const selectedMonthStr = $("#fecha").val(); // Formato YYYY-MM
-            if (selectedMonthStr) {
-              const parts = selectedMonthStr.split('-');
-              d.year = parts[0];
-              d.month = parts[1];
-            } else {
-              const date = new Date();
-              d.year = date.getFullYear();
-              d.month = String(date.getMonth() + 1).padStart(2, '0');
-            }
-          },
-          dataSrc: function ( json ) {
-            const list = json.data || [];
-            list.forEach(function(row) {
-              row.Estado = (row.FechaCerrado && row.FechaCerrado.trim() !== '' && row.FechaCerrado !== 'null') ? 'Atendido' : 'Por Atender';
-            });
-            return list;
-          }
-        },
-        initComplete: function(settings, json) {
-          // Ajustar las columnas automáticamente después de que la tabla sea inicializada
-          setTimeout(function() {
-            table.columns.adjust();
-          }, 100);
-        },
-
-        columns: [
-          { "data" : "NominaCreador", "title" : "Nómina", "className": "dt-head-center dt-body-center no-wrap", "width": "1%" },
-          { 
-            "data" : "Nombre", 
-            "title" : "Creador", 
-            "className": "dt-head-center dt-body-center", 
-            "width": "1%",
-            "render": function(data, type, row) {
-              if (type === 'display' && data) {
-                return `<div style="max-width: 110px; min-width: 80px; text-align: center; white-space: normal; word-break: break-word;">${data}</div>`;
-              }
-              return data || '';
-            }
-          },
-          { "data" : "Unidad", "title" : "Unidad", "className": "dt-head-center dt-body-center no-wrap", "width": "1%" },
-          { 
-            "data" : "Departamento", 
-            "title" : "Departamento", 
-            "className": "dt-head-center dt-body-center no-wrap", 
-            "width": "1%",
-            "render": function(data, type, row) {
-              return data || '-';
-            }
-          },
-          { 
-            "data" : "Planta", 
-            "title" : "Planta", 
-            "className": "dt-head-center dt-body-center no-wrap", 
-            "width": "1%",
-            "render": function(data, type, row) {
-              return data || row.planta || '-';
-            }
-          },
-          { 
-            "data" : "ProblemaDescripcion", 
-            "title" : "Problema",
-            "className": "dt-head-center dt-body-center",
-            "width": "1%",
-            "render": function(data, type, row) {
-              const probMap = {
-                'falla en camara': { text: 'Falla en Cámara', css: 'badge-camara' },
-                'falla en memoria': { text: 'Falla en Memoria', css: 'badge-memoria' },
-                'gps': { text: 'GPS', css: 'badge-gps' },
-                'dmas': { text: 'DMAS', css: 'badge-dmas' }
-              };
-              const key = (data || '').toLowerCase().trim();
-              const info = probMap[key] || { text: data || '', css: '' };
-              if (type === 'display') {
-                return `<div class="text-center"><button type="button" class="btn btn-badge ${info.css}" style="white-space: normal !important; max-width: 95px; display: inline-block; line-height: 1.2;">${info.text}</button></div>`;
-              }
-              if (type === 'filter') {
-                return info.text;
-              }
-              return data;
-            }
-          },
-          { 
-            "data" : "Detalle", 
-            "title" : "Detalle", 
-            "className": "dt-head-center dt-body-center", 
-            "width": "60%",
-            "render": function(data, type, row) {
-              if (type === 'display') {
-                return `<div style="min-width: 150px; max-width: 500px; text-align: left; white-space: normal; word-break: break-word;">${data}</div>`;
-              }
-              return data;
-            }
-          },
-          { 
-            "data" : "FechaCreacion", 
-            "title" : "Fecha Creación", 
-            "className": "dt-head-center dt-body-center no-wrap",
-            "width": "1%",
-            "render": function(data, type, row) {
-              if (type === 'display') {
-                return formatVisualDate(data);
-              }
-              return data;
-            }
-          },
-          { 
-            "data" : "Resolucion", 
-            "title" : "Resolución", 
-            "className": "dt-head-center dt-body-center",
-            "width": "30%",
-            "render": function(data, type, row) {
-              if (tienePermiso && row.Estado === 'Por Atender' && type === 'display') {
-                return `<textarea id="Resolucion_${row.Id}" class="form-control" placeholder="Escriba la resolución..." rows="2" style="width: 100%; min-width: 130px; max-width: 260px; font-size: 12px; padding: 4px;"></textarea>`;
-              }
-              if (type === 'display') {
-                return `<div style="min-width: 140px; max-width: 400px; text-align: left; white-space: normal; word-break: break-word;">${data || '-'}</div>`;
-              }
-              return data || '';
-            }
-          },
-          { 
-            "data" : "TipoResolucionId", 
-            "title" : "Tipo de Falla", 
-            "className": "dt-head-center dt-body-center no-wrap",
-            "width": "1%",
-            "render": function(data, type, row) {
-              if (tienePermiso && row.Estado === 'Por Atender' && type === 'display') {
-                let options = '<option value="">Seleccione...</option>';
-                tiposResolucion.forEach(function(item) {
-                  const label = item.Nombre || item.Descripcion || item.TipoResolucion || item.text;
-                  if (label) {
-                    options += `<option value="${item.Id}">${label}</option>`;
-                  }
-                });
-                return `<select id="TipoFalla_${row.Id}" class="form-select" style="width: 100px; min-width: 90px; font-size: 12px; padding: 2px 4px; height: auto;">
-                          ${options}
-                        </select>`;
-              }
-              if (data && tiposResolucion.length > 0) {
-                const match = tiposResolucion.find(function(item) {
-                  return String(item.Id) === String(data);
-                });
-                if (match) {
-                  return match.Nombre || match.Descripcion || match.TipoResolucion || data;
-                }
-              }
-              return data || '-';
-            }
-          },
-          { 
-            "data" : "FechaCerrado", 
-            "title" : "Fecha Cerrado", 
-            "className": "dt-head-center dt-body-center no-wrap",
-            "width": "1%",
-            "render": function(data, type, row) {
-              if (tienePermiso && row.Estado === 'Por Atender' && type === 'display') {
-                return `<button class="btn btn-success btn-badge" onclick="GuardarSeguimiento(${row.Id})"><i class="fa-regular fa-floppy-disk"></i> Guardar</button>`;
-              }
-              if (type === 'display') {
-                return formatVisualDate(data) || '-';
-              }
-              return data || '';
-            }
-          },
-          { 
-            "data" : "ResolucionNombre", 
-            "title" : "Técnico", 
-            "className": "dt-head-center dt-body-center",
-            "width": "1%",
-            "render": function(data, type, row) {
-              if (type === 'display') {
-                return `<div style="max-width: 110px; min-width: 80px; text-align: center; white-space: normal; word-break: break-word;">${data ? data : '-'}</div>`;
-              }
-              return data || '';
-            }
-          },
-          { 
-            "data" : "Estado", 
-            "title" : "Estado", 
-            "className": "dt-head-center dt-body-center no-wrap",
-            "width": "1%",
-            "render": function(data, type, row) {
-              if (type === 'display') {
-                if (data === 'Atendido') {
-                  return `<span class="badge bg-success text-white" style="padding: 6px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;">Atendido</span>`;
-                }
-                return `<span class="badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;">Por Atender</span>`;
-              }
-              return data;
-            }
-          }
-        ]
-      });
-      
-      // Ajustar columnas al redimensionar la ventana
-      $(window).on('resize', function () {
-        table.columns.adjust();
-      });
-    }
-
-    function GuardarSeguimiento(id) {
-      const resolucion = $("#Resolucion_" + id).val().trim();
-      const tipoResolucionId = $("#TipoFalla_" + id).val();
-
-      if (!resolucion) {
-        Swal.fire({
-          icon: "info",
-          title: "Resolución requerida",
-          text: "Escriba la resolución del reporte antes de guardar."
-        });
-        return;
-      }
-
-      if (!tipoResolucionId) {
-        Swal.fire({
-          icon: "info",
-          title: "Tipo de resolución requerido",
-          text: "Seleccione el tipo de resolución."
-        });
-        return;
-      }
-
-      const nomina = nominaUsuario;
-
-      Swal.fire({
-        title: "¿Quieres guardar el registro? Ya no se podrá editar",
-        text: "Esta acción cambiará el estado a Atendido de manera permanente.",
-        icon: "question",
-        showDenyButton: true,
-        confirmButtonText: "Guardar",
-        denyButtonText: `Cancelar`,
-        confirmButtonColor: '#198754',
-        denyButtonColor: '#6c757d'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            url: host + '/Master-API/ses/FTU/ActualizarResolucion',
-            type: 'PUT',
-            data: {
-              Id: id,
-              Resolucion: resolucion,
-              TipoResolucionId: tipoResolucionId,
-              NominaResolucion: nomina
-            },
-            dataType: 'json',
-            success: function(respuesta) {
-              if(!respuesta.error){
-                Swal.fire({
-                  title: "¡Guardado!",
-                  text: respuesta.message || "Seguimiento guardado correctamente.",
-                  icon: "success"
-                });
-                table.ajax.reload();
-              }
-              else{
-                Swal.fire({
-                  icon: "error",
-                  title: "Error",
-                  text: respuesta.message || respuesta.error || "Ocurrió un error al guardar."
-                });
-              }
-            },
-            error: function(xhr, status, error) {
-              Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "Ocurrió un error al procesar la solicitud."
-              });
-            }
-          });
-        }
-      });
-    }
-
-    // Cargar catálogo de tipos de resolución antes de cargar los datos de la tabla
-    function cargarTiposResolucion(callback) {
-      $.ajax({
-        url: host + "/Master-API/ses/FTU/GetTiposResolucionFTU",
-        type: 'GET',
-        dataType: 'json',
-        success: function(respuesta) {
-          tiposResolucion = respuesta.data || respuesta || [];
-          if (callback) callback();
-        },
-        error: function(xhr, status, error) {
-          console.error("Error al obtener tipos de resolución de producción:", error);
-          if (callback) callback();
-        }
-      });
-    }
-
-    // Desactivar el manejo automático de errores de DataTables (muestra advertencias en alert)
-    $.fn.dataTable.ext.errMode = 'none';
-
-    // Carga inicial de datos tras obtener el catálogo
-    cargarTiposResolucion(function() {
-      loadData();
-    });
-  </script>
+    <!-- Script Application Logic -->
+    <script>
+        const loggedUserNomina = "<?php echo $nominaUsuario; ?>";
+        const userHasEditPermission = <?php echo $permisoUsuario ? 'true' : 'false'; ?>;
+    </script>
+    <script src="js/app.js?v=<?php echo time(); ?>"></script>
+</body>
 </html>

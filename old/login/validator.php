@@ -1,5 +1,13 @@
 <?php
+
+$host =
+    (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off") ||
+    $_SERVER["SERVER_PORT"] == 443
+        ? "https"
+        : "http";
+$host .= "://" . $_SERVER["HTTP_HOST"];
 $host = "https://ses.lidcorp.mx";
+
 $url = $host . "/Master-API/ses/System/ValidateReportLogin";
 
 $user = $_POST["user"] ?? null;
@@ -26,22 +34,20 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
 
 // Ejecutar la solicitud cURL
 $response = json_decode(curl_exec($ch));
-curl_close($ch);
 
-$error = isset($response->error) ? $response->error : true;
+$error = $response->error;
 
-if (!$error && isset($response->data)) {
+if (!$error) {
     session_start();
     $name = $response->data->name;
     $actualizar = !empty($response->data->actualizar);
     $_SESSION["usuario"] = $name;
     $_SESSION["nomina"] = $user;
     $_SESSION["permiso"] = $actualizar;
-    header("Location: ../");
+    header("Location: ./../");
 } else {
     session_start();
-    $message = isset($response->message) ? $response->message : "Error de conexión con la API.";
+    $message = $response->message;
     $_SESSION["error-message"] = $message;
-    header("Location: ../login/");
+    header("Location: ./../login/");
 }
-?>
