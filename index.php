@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+if (empty($_SESSION["usuario"])) {
+    header("Location: login/");
+    exit;
+}
+
+$nominaUsuario = $_SESSION["nomina"];
+$nombreUsuario = $_SESSION["usuario"];
+$permisoUsuario = $_SESSION["permiso"];
+?>
 <!DOCTYPE html>
 <html lang="es" dir="ltr">
   <head>
@@ -38,16 +50,23 @@
             <span class="bold text-info">Usuario:</span>
             &nbsp;
             <span class="text-white">
-              Administrador (Demo)
+              <?php echo htmlspecialchars($nombreUsuario); ?>
             </span>
+            &nbsp;
+            &nbsp;
+            <a href="login/" class="text-warning ms-3">
+              Cerrar sesión
+            </a>
           </div>
         </div>
       </div>
     </header>
     <div class="container-fluid main py-3">
       <div class="card p-3">
-        <table id="reportsTable" class="blueTable" style="width: 100%;">
-        </table>
+        <div class="table-responsive">
+          <table id="reportsTable" class="blueTable" style="width: 100%;">
+          </table>
+        </div>
       </div>
     </div>
     <footer class="p-4">
@@ -60,7 +79,11 @@
   </body>
   <script type="text/javascript">
     var table;
-    const mockJsonUrl = "data/reportes.json";
+    const host = "https://ses.lidcorp.mx";
+    const apiBaseUrl = host + "/Master-API/ses/FTU/ConsultarPorMes";
+    const nominaUsuario = "<?php echo $nominaUsuario; ?>";
+    const tienePermiso = <?php echo $permisoUsuario ? 'true' : 'false'; ?>;
+    var tiposResolucion = [];
 
     // Helper para formatear fechas a diseño de doble línea con iconos
     function formatVisualDate(dateStr) {
@@ -111,7 +134,7 @@
         table.ajax.reload();
       }
       else{
-        createTable(mockJsonUrl);
+        createTable(apiBaseUrl);
       }
     }
 
@@ -130,6 +153,13 @@
               var div = node.querySelector('div');
               return div ? div.textContent.trim() : data;
             }
+            // Si la columna es Fecha Cerrado (índice 8) y contiene el botón de guardar
+            if (column === 8) {
+              var button = node.querySelector('button');
+              if (button && button.textContent.includes('Guardar')) {
+                return '';
+              }
+            }
             // Si la columna es Fecha Creación (5) o Fecha Cerrado (8) con formato de doble línea
             if (column === 5 || column === 8) {
               var container = node.querySelector('[data-raw-date]');
@@ -147,13 +177,6 @@
               var select = node.querySelector('select');
               return select ? select.value : data;
             }
-            // Si la columna es Fecha Cerrado (índice 8) y contiene el botón de guardar
-            if (column === 8) {
-              var button = node.querySelector('button');
-              if (button && button.textContent.includes('Guardar')) {
-                return '';
-              }
-            }
             // Si la columna es Estado (índice 10), exportar el texto limpio sin etiquetas HTML
             if (column === 10) {
               var badge = node.querySelector('.badge');
@@ -165,8 +188,9 @@
       };
 
       table = $('#reportsTable').DataTable({
-        scrollX: true,
-        responsive: true,
+        scrollX: false,
+        responsive: false,
+        autoWidth: false,
         dom: 'Blfrtip',
         buttons: [
           {
@@ -203,15 +227,25 @@
         language: {'url': 'https://cdn.datatables.net/plug-ins/a5734b29083/i18n/Spanish.json' },
         ajax: {
           url: url,
-          dataSrc: function ( json ) {
-            const selectedMonth = $("#fecha")[0].value; // Formato YYYY-MM
-            if (!selectedMonth) {
-              return json.data;
+          type: 'GET',
+          data: function ( d ) {
+            const selectedMonthStr = $("#fecha").val(); // Formato YYYY-MM
+            if (selectedMonthStr) {
+              const parts = selectedMonthStr.split('-');
+              d.year = parts[0];
+              d.month = parts[1];
+            } else {
+              const date = new Date();
+              d.year = date.getFullYear();
+              d.month = String(date.getMonth() + 1).padStart(2, '0');
             }
-            // Filtrar los datos en el cliente para que coincidan con el mes seleccionado en fechaCreacion
-            return json.data.filter(v => {
-              return v.fechaCreacion && v.fechaCreacion.startsWith(selectedMonth);
+          },
+          dataSrc: function ( json ) {
+            const list = json.data || [];
+            list.forEach(function(row) {
+              row.Estado = (row.FechaCerrado && row.FechaCerrado.trim() !== '' && row.FechaCerrado !== 'null') ? 'Atendido' : 'Por Atender';
             });
+            return list;
           }
         },
         initComplete: function(settings, json) {
@@ -220,25 +254,38 @@
             table.columns.adjust();
           }, 100);
         },
+
         columns: [
-          { "data" : "Nomina", "title" : "Nómina", "className": "dt-head-center dt-body-center", "width": "70px" },
-          { "data" : "Nombre", "title" : "Creador", "className": "dt-head-center dt-body-center", "width": "100px" },
-          { "data" : "Unidad", "title" : "Unidad", "className": "dt-head-center dt-body-center", "width": "50px" },
+          { "data" : "NominaCreador", "title" : "Nómina", "className": "dt-head-center dt-body-center no-wrap", "width": "1%" },
           { 
-            "data" : "Problema", 
+            "data" : "Nombre", 
+            "title" : "Creador", 
+            "className": "dt-head-center dt-body-center", 
+            "width": "1%",
+            "render": function(data, type, row) {
+              if (type === 'display' && data) {
+                return `<div style="max-width: 110px; min-width: 80px; text-align: center; white-space: normal; word-break: break-word;">${data}</div>`;
+              }
+              return data || '';
+            }
+          },
+          { "data" : "Unidad", "title" : "Unidad", "className": "dt-head-center dt-body-center no-wrap", "width": "1%" },
+          { 
+            "data" : "ProblemaDescripcion", 
             "title" : "Problema",
             "className": "dt-head-center dt-body-center",
-            "width": "80px",
+            "width": "1%",
             "render": function(data, type, row) {
               const probMap = {
-                'Falla en Camara': { text: 'Falla en Cámara', css: 'badge-camara' },
-                'Falla en memoria': { text: 'Falla en Memoria', css: 'badge-memoria' },
-                'GPS': { text: 'GPS', css: 'badge-gps' },
-                'DMAS': { text: 'DMAS', css: 'badge-dmas' }
+                'falla en camara': { text: 'Falla en Cámara', css: 'badge-camara' },
+                'falla en memoria': { text: 'Falla en Memoria', css: 'badge-memoria' },
+                'gps': { text: 'GPS', css: 'badge-gps' },
+                'dmas': { text: 'DMAS', css: 'badge-dmas' }
               };
-              const info = probMap[data] || { text: data || '', css: '' };
+              const key = (data || '').toLowerCase().trim();
+              const info = probMap[key] || { text: data || '', css: '' };
               if (type === 'display') {
-                return `<div class="text-center"><button type="button" class="btn btn-badge ${info.css}">${info.text}</button></div>`;
+                return `<div class="text-center"><button type="button" class="btn btn-badge ${info.css}" style="white-space: normal !important; max-width: 95px; display: inline-block; line-height: 1.2;">${info.text}</button></div>`;
               }
               if (type === 'filter') {
                 return info.text;
@@ -250,19 +297,19 @@
             "data" : "Detalle", 
             "title" : "Detalle", 
             "className": "dt-head-center dt-body-center", 
-            "width": "330px",
+            "width": "60%",
             "render": function(data, type, row) {
               if (type === 'display') {
-                return `<div style="width: 320px; min-width: 260px; text-align: left; white-space: normal; word-break: break-word;">${data}</div>`;
+                return `<div style="min-width: 150px; max-width: 500px; text-align: left; white-space: normal; word-break: break-word;">${data}</div>`;
               }
               return data;
             }
           },
           { 
-            "data" : "fechaCreacion", 
+            "data" : "FechaCreacion", 
             "title" : "Fecha Creación", 
-            "className": "dt-head-center dt-body-center",
-            "width": "90px",
+            "className": "dt-head-center dt-body-center no-wrap",
+            "width": "1%",
             "render": function(data, type, row) {
               if (type === 'display') {
                 return formatVisualDate(data);
@@ -274,62 +321,78 @@
             "data" : "Resolucion", 
             "title" : "Resolución", 
             "className": "dt-head-center dt-body-center",
-            "width": "310px",
+            "width": "30%",
             "render": function(data, type, row) {
-              if (row.Estado === 'Por Atender' && type === 'display') {
-                return `<textarea id="Resolucion_${row.Id}" class="form-control" placeholder="Escriba la resolución..." rows="2" style="width: 280px; min-width: 240px; font-size: 12px; padding: 4px;"></textarea>`;
+              if (tienePermiso && row.Estado === 'Por Atender' && type === 'display') {
+                return `<textarea id="Resolucion_${row.Id}" class="form-control" placeholder="Escriba la resolución..." rows="2" style="width: 100%; min-width: 130px; max-width: 260px; font-size: 12px; padding: 4px;"></textarea>`;
               }
               if (type === 'display') {
-                return `<div style="width: 300px; min-width: 240px; text-align: left; white-space: normal; word-break: break-word;">${data || ''}</div>`;
+                return `<div style="min-width: 140px; max-width: 400px; text-align: left; white-space: normal; word-break: break-word;">${data || '-'}</div>`;
               }
               return data || '';
             }
           },
           { 
-            "data" : "TipoFalla", 
+            "data" : "TipoResolucionId", 
             "title" : "Tipo de Falla", 
-            "className": "dt-head-center dt-body-center",
-            "width": "90px",
+            "className": "dt-head-center dt-body-center no-wrap",
+            "width": "1%",
             "render": function(data, type, row) {
-              if (row.Estado === 'Por Atender' && type === 'display') {
+              if (tienePermiso && row.Estado === 'Por Atender' && type === 'display') {
+                let options = '<option value="">Seleccione...</option>';
+                tiposResolucion.forEach(function(item) {
+                  const label = item.Nombre || item.Descripcion || item.TipoResolucion || item.text;
+                  if (label) {
+                    options += `<option value="${item.Id}">${label}</option>`;
+                  }
+                });
                 return `<select id="TipoFalla_${row.Id}" class="form-select" style="width: 100px; min-width: 90px; font-size: 12px; padding: 2px 4px; height: auto;">
-                          <option value="">Seleccione...</option>
-                          <option value="Falla">Falla</option>
-                          <option value="Daño">Daño</option>
+                          ${options}
                         </select>`;
               }
-              return data || '';
+              if (data && tiposResolucion.length > 0) {
+                const match = tiposResolucion.find(function(item) {
+                  return String(item.Id) === String(data);
+                });
+                if (match) {
+                  return match.Nombre || match.Descripcion || match.TipoResolucion || data;
+                }
+              }
+              return data || '-';
             }
           },
           { 
             "data" : "FechaCerrado", 
             "title" : "Fecha Cerrado", 
-            "className": "dt-head-center dt-body-center",
-            "width": "90px",
+            "className": "dt-head-center dt-body-center no-wrap",
+            "width": "1%",
             "render": function(data, type, row) {
-              if (row.Estado === 'Por Atender' && type === 'display') {
+              if (tienePermiso && row.Estado === 'Por Atender' && type === 'display') {
                 return `<button class="btn btn-success btn-badge" onclick="GuardarSeguimiento(${row.Id})"><i class="fa-regular fa-floppy-disk"></i> Guardar</button>`;
               }
               if (type === 'display') {
-                return formatVisualDate(data);
+                return formatVisualDate(data) || '-';
               }
               return data || '';
             }
           },
           { 
-            "data" : "Tecnico", 
-            "title" : "Nombre del Técnico", 
+            "data" : "ResolucionNombre", 
+            "title" : "Técnico", 
             "className": "dt-head-center dt-body-center",
-            "width": "110px",
+            "width": "1%",
             "render": function(data, type, row) {
-              return data ? data : '-';
+              if (type === 'display') {
+                return `<div style="max-width: 110px; min-width: 80px; text-align: center; white-space: normal; word-break: break-word;">${data ? data : '-'}</div>`;
+              }
+              return data || '';
             }
           },
           { 
             "data" : "Estado", 
             "title" : "Estado", 
-            "className": "dt-head-center dt-body-center",
-            "width": "80px",
+            "className": "dt-head-center dt-body-center no-wrap",
+            "width": "1%",
             "render": function(data, type, row) {
               if (type === 'display') {
                 if (data === 'Atendido') {
@@ -351,7 +414,7 @@
 
     function GuardarSeguimiento(id) {
       const resolucion = $("#Resolucion_" + id).val().trim();
-      const tipoFalla = $("#TipoFalla_" + id).val();
+      const tipoResolucionId = $("#TipoFalla_" + id).val();
 
       if (!resolucion) {
         Swal.fire({
@@ -362,14 +425,16 @@
         return;
       }
 
-      if (!tipoFalla) {
+      if (!tipoResolucionId) {
         Swal.fire({
           icon: "info",
-          title: "Tipo de falla requerido",
-          text: "Seleccione si es Falla o Daño."
+          title: "Tipo de resolución requerido",
+          text: "Seleccione el tipo de resolución."
         });
         return;
       }
+
+      const nomina = nominaUsuario;
 
       Swal.fire({
         title: "¿Quieres guardar el registro? Ya no se podrá editar",
@@ -383,19 +448,20 @@
       }).then((result) => {
         if (result.isConfirmed) {
           $.ajax({
-            url: 'api/actualizar.php',
-            type: 'POST',
+            url: host + '/Master-API/ses/FTU/ActualizarResolucion',
+            type: 'PUT',
             data: {
-              id: id,
-              resolucion: resolucion,
-              tipoFalla: tipoFalla
+              Id: id,
+              Resolucion: resolucion,
+              TipoResolucionId: tipoResolucionId,
+              NominaResolucion: nomina
             },
             dataType: 'json',
             success: function(respuesta) {
               if(!respuesta.error){
                 Swal.fire({
                   title: "¡Guardado!",
-                  text: respuesta.message,
+                  text: respuesta.message || "Seguimiento guardado correctamente.",
                   icon: "success"
                 });
                 table.ajax.reload();
@@ -404,7 +470,7 @@
                 Swal.fire({
                   icon: "error",
                   title: "Error",
-                  text: respuesta.message
+                  text: respuesta.message || respuesta.error || "Ocurrió un error al guardar."
                 });
               }
             },
@@ -420,10 +486,29 @@
       });
     }
 
+    // Cargar catálogo de tipos de resolución antes de cargar los datos de la tabla
+    function cargarTiposResolucion(callback) {
+      $.ajax({
+        url: host + "/Master-API/ses/FTU/GetTiposResolucionFTU",
+        type: 'GET',
+        dataType: 'json',
+        success: function(respuesta) {
+          tiposResolucion = respuesta.data || respuesta || [];
+          if (callback) callback();
+        },
+        error: function(xhr, status, error) {
+          console.error("Error al obtener tipos de resolución de producción:", error);
+          if (callback) callback();
+        }
+      });
+    }
+
     // Desactivar el manejo automático de errores de DataTables (muestra advertencias en alert)
     $.fn.dataTable.ext.errMode = 'none';
 
-    // Carga inicial de datos
-    loadData();
+    // Carga inicial de datos tras obtener el catálogo
+    cargarTiposResolucion(function() {
+      loadData();
+    });
   </script>
 </html>

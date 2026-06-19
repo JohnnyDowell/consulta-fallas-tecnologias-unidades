@@ -131,3 +131,35 @@ tbody td:last-child {
     pointer-events: none;
 }
 
+/* Corrección de desfase físico en DataTables con scrollX */
+table.blueTable, table.blueTable th, table.blueTable td {
+    box-sizing: border-box !important;
+}
+
+/* Permitir que las cabeceras de la tabla hagan salto de línea para ahorrar espacio horizontal */
+table.blueTable thead th {
+    white-space: normal !important;
+    word-break: normal !important;
+    vertical-align: middle !important;
+}
+
+/* Reducir padding y fuente de los encabezados para compactar al máximo */
+table.blueTable thead th,
+table.blueTable thead th.sorting,
+table.blueTable thead th.sorting_asc,
+table.blueTable thead th.sorting_desc {
+    padding: 5px 16px 5px 6px !important;
+    font-size: 13px !important;
+}
+
+/* Ajustar los iconos de ordenamiento de DataTables para que no encimen las letras */
+table.blueTable thead th.sorting:before,
+table.blueTable thead th.sorting:after,
+table.blueTable thead th.sorting_asc:before,
+table.blueTable thead th.sorting_asc:after,
+table.blueTable thead th.sorting_desc:before,
+table.blueTable thead th.sorting_desc:after {
+    right: 4px !important;
+}
+
+
