@@ -143,42 +143,42 @@ $permisoUsuario = $_SESSION["permiso"];
       const exportFormat = {
         format: {
           body: function (data, row, column, node) {
-            // Si la columna es Problema (índice 3), retornar el texto limpio del botón
-            if (column === 3) {
+            // Si la columna es Problema (índice 5), retornar el texto limpio del botón
+            if (column === 5) {
               var button = node.querySelector('button');
               return button ? button.textContent.trim() : data;
             }
-            // Si la columna es Detalle (índice 4), retornar el texto limpio del div
-            if (column === 4) {
+            // Si la columna es Detalle (índice 6), retornar el texto limpio del div
+            if (column === 6) {
               var div = node.querySelector('div');
               return div ? div.textContent.trim() : data;
             }
-            // Si la columna es Fecha Cerrado (índice 8) y contiene el botón de guardar
-            if (column === 8) {
+            // Si la columna es Fecha Cerrado (índice 10) y contiene el botón de guardar
+            if (column === 10) {
               var button = node.querySelector('button');
               if (button && button.textContent.includes('Guardar')) {
                 return '';
               }
             }
-            // Si la columna es Fecha Creación (5) o Fecha Cerrado (8) con formato de doble línea
-            if (column === 5 || column === 8) {
+            // Si la columna es Fecha Creación (7) o Fecha Cerrado (10) con formato de doble línea
+            if (column === 7 || column === 10) {
               var container = node.querySelector('[data-raw-date]');
               return container ? container.getAttribute('data-raw-date') : data;
             }
-            // Si la columna es Resolución (índice 6), exportar el valor del textarea si existe, o el texto del div
-            if (column === 6) {
+            // Si la columna es Resolución (índice 8), exportar el valor del textarea si existe, o el texto del div
+            if (column === 8) {
               var textarea = node.querySelector('textarea');
               if (textarea) return textarea.value;
               var div = node.querySelector('div');
               return div ? div.textContent.trim() : data;
             }
-            // Si la columna es Tipo de Falla (índice 7), exportar el valor del select si existe
-            if (column === 7) {
+            // Si la columna es Tipo de Falla (índice 9), exportar el valor del select si existe
+            if (column === 9) {
               var select = node.querySelector('select');
               return select ? select.value : data;
             }
-            // Si la columna es Estado (índice 10), exportar el texto limpio sin etiquetas HTML
-            if (column === 10) {
+            // Si la columna es Estado (índice 12), exportar el texto limpio sin etiquetas HTML
+            if (column === 12) {
               var badge = node.querySelector('.badge');
               return badge ? badge.textContent.trim() : data;
             }
@@ -270,6 +270,24 @@ $permisoUsuario = $_SESSION["permiso"];
             }
           },
           { "data" : "Unidad", "title" : "Unidad", "className": "dt-head-center dt-body-center no-wrap", "width": "1%" },
+          { 
+            "data" : "Departamento", 
+            "title" : "Departamento", 
+            "className": "dt-head-center dt-body-center no-wrap", 
+            "width": "1%",
+            "render": function(data, type, row) {
+              return data || '-';
+            }
+          },
+          { 
+            "data" : "Planta", 
+            "title" : "Planta", 
+            "className": "dt-head-center dt-body-center no-wrap", 
+            "width": "1%",
+            "render": function(data, type, row) {
+              return data || row.planta || '-';
+            }
+          },
           { 
             "data" : "ProblemaDescripcion", 
             "title" : "Problema",
