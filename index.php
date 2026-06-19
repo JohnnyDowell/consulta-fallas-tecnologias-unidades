@@ -182,6 +182,11 @@ $permisoUsuario = $_SESSION["permiso"];
               var badge = node.querySelector('.badge');
               return badge ? badge.textContent.trim() : data;
             }
+            // Si la columna es Creador (índice 1) o Técnico (índice 11), extraer texto del div
+            if (column === 1 || column === 11) {
+              var div = node.querySelector('div');
+              return div ? div.textContent.trim() : data;
+            }
             return data;
           }
         }
